@@ -8,7 +8,8 @@
 @interface DatePickerViewController : NSObject
 
 @property (nonatomic, retain) UIDatePicker *datePicker;
-
+@property (nonatomic, retain) UIControl *bgView;
+@property (nonatomic, assign) BOOL showing;
 
 + (DatePickerViewController *)sharedInstance;
 
@@ -20,11 +21,15 @@
 
 - (void) dateChanged:(id)sender;
 
+- (void) bgClick:(id)sender;
+
 @end
 
 @implementation DatePickerViewController
 
 @synthesize datePicker;
+@synthesize bgView;
+@synthesize showing;
 
 static DatePickerViewController *sharedInstance = nil;
 
@@ -50,44 +55,64 @@ extern "C" void sendEvent(int type, const char *data);
 	trace("showDatePickerPhoto");
 
 	UIView *rootView = [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
-	self.datePicker = [[UIDatePicker alloc] init];
-	self.datePicker.datePickerMode = UIDatePickerModeDate;
-	//self.datePicker.datePickerMode = UIDatePickerModeDateAndTime;
-	self.datePicker.hidden = NO;
-	self.datePicker.date = [NSDate date];
-	[self.datePicker addTarget:self action:@selector(dateChanged:) forControlEvents:UIControlEventValueChanged];
 
-	CGRect datePickerFrame = self.datePicker.frame;
-	datePickerFrame.origin.y = rootView.bounds.size.height;
-	//datePickerFrame.origin.y = rootView.bounds.size.height - datePickerFrame.size.height;
-	self.datePicker.frame = datePickerFrame;
-	[rootView addSubview:self.datePicker];
-	// slide in
-	[UIView animateWithDuration:0.3 
-		animations:^{
-			self.datePicker.frame = CGRectMake( self.datePicker.frame.origin.x,
-												self.datePicker.frame.origin.y - datePickerFrame.size.height,
-												self.datePicker.frame.size.width,
-												self.datePicker.frame.size.height);
-		} completion:^(BOOL finished) {
-			
-		}];
+	if (![self showing]) {
+
+		[self setShowing:YES];
+
+		self.bgView = [[UIControl alloc] init];
+		self.bgView.frame = rootView.bounds;
+		self.bgView.backgroundColor = [UIColor blackColor];
+		self.bgView.alpha = 0.5;
+		[self.bgView addTarget:self action:@selector(bgClick:) forControlEvents:UIControlEventTouchUpInside];
+		[rootView addSubview:self.bgView];
+
+		self.datePicker = [[UIDatePicker alloc] init];
+		self.datePicker.datePickerMode = UIDatePickerModeDate;
+		//self.datePicker.datePickerMode = UIDatePickerModeDateAndTime;
+		self.datePicker.hidden = NO;
+		self.datePicker.date = [NSDate date];
+		[self.datePicker addTarget:self action:@selector(dateChanged:) forControlEvents:UIControlEventValueChanged];
+
+		CGRect datePickerFrame = self.datePicker.frame;
+		datePickerFrame.origin.y = rootView.bounds.size.height;
+		//datePickerFrame.origin.y = rootView.bounds.size.height - datePickerFrame.size.height;
+		self.datePicker.frame = datePickerFrame;
+		[rootView addSubview:self.datePicker];
+		// slide in
+		[UIView animateWithDuration:0.3 
+			animations:^{
+				self.datePicker.frame = CGRectMake( self.datePicker.frame.origin.x,
+						self.datePicker.frame.origin.y - datePickerFrame.size.height,
+						self.datePicker.frame.size.width,
+						self.datePicker.frame.size.height);
+			} completion:^(BOOL finished) {
+
+			}];
+	}
+
 }
 
 - (void) removeDatePicker {
 
-	// slide out
-	[UIView animateWithDuration:0.3
-		animations:^{
-			self.datePicker.frame = CGRectMake( self.datePicker.frame.origin.x,
-												[[[[UIApplication sharedApplication] keyWindow] rootViewController] view].bounds.size.height,
-												self.datePicker.frame.size.width,
-												self.datePicker.frame.size.height);
-		} completion:^(BOOL finished) {
-			[self.datePicker removeFromSuperview];
-			sendEvent(1, "remove");
-		}];
+	if ([self showing]) {
 
+		[self setShowing:NO];
+
+		[self.bgView removeFromSuperview];
+
+		// slide out
+		[UIView animateWithDuration:0.3
+			animations:^{
+				self.datePicker.frame = CGRectMake( self.datePicker.frame.origin.x,
+						[[[[UIApplication sharedApplication] keyWindow] rootViewController] view].bounds.size.height,
+						self.datePicker.frame.size.width,
+						self.datePicker.frame.size.height);
+			} completion:^(BOOL finished) {
+				[self.datePicker removeFromSuperview];
+				sendEvent(1, "remove");
+			}];
+	}
 
 }
 
@@ -107,7 +132,14 @@ extern "C" void sendEvent(int type, const char *data);
 
 }
 
+- (void) bgClick:(id)sender {
+	[self removeDatePicker];
+}
+
 - (void) dealloc {
+
+	[bgView release];
+	bgView = nil;
 
 	[datePicker release];
 	datePicker = nil;
@@ -120,7 +152,7 @@ extern "C" void sendEvent(int type, const char *data);
 
 namespace extension {
 
-	bool isOpen = false;
+	//bool isOpen = false;
 
 	bool initDatePicker() {
 
@@ -131,19 +163,13 @@ namespace extension {
 
 	void showDatePicker() {
 
-		if(!isOpen) {
-			[[DatePickerViewController sharedInstance] showDatePicker];
-			isOpen = true;
-		}
+		[[DatePickerViewController sharedInstance] showDatePicker];
 
 	}
 
 	void removeDatePicker() {
 
-		if(isOpen) {
-			[[DatePickerViewController sharedInstance] removeDatePicker];
-			isOpen = false;
-		}
+		[[DatePickerViewController sharedInstance] removeDatePicker];
 
 	}
     

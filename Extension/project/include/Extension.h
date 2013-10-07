@@ -5,7 +5,7 @@
 
 namespace extension {
 	
-	extern bool isOpen;
+	//extern bool isOpen;
 
 	int SampleMethod(int inputValue);
 
