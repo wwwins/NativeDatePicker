@@ -3,12 +3,14 @@
 
 #include "Extension.h"
 
+#define MyDateTimePickerToolbarHeight 40
 
 // UIViewController -> NSObject
 @interface DatePickerViewController : NSObject
 
 @property (nonatomic, retain) UIDatePicker *datePicker;
-@property (nonatomic, retain) UIControl *bgView;
+@property (nonatomic, retain) UIControl *uiView;
+@property (nonatomic, retain) UIToolbar *toolBar;
 @property (nonatomic, assign) BOOL showing;
 
 + (DatePickerViewController *)sharedInstance;
@@ -28,7 +30,8 @@
 @implementation DatePickerViewController
 
 @synthesize datePicker;
-@synthesize bgView;
+@synthesize uiView;
+@synthesize toolBar;
 @synthesize showing;
 
 static DatePickerViewController *sharedInstance = nil;
@@ -60,35 +63,48 @@ extern "C" void sendEvent(int type, const char *data);
 
 		[self setShowing:YES];
 
-		self.bgView = [[UIControl alloc] init];
-		self.bgView.frame = rootView.bounds;
-		self.bgView.backgroundColor = [UIColor blackColor];
-		self.bgView.alpha = 0.5;
-		[self.bgView addTarget:self action:@selector(bgClick:) forControlEvents:UIControlEventTouchUpInside];
-		[rootView addSubview:self.bgView];
+		if (self.uiView==nil) {
+			self.uiView = [[UIControl alloc] init];
+			//CGRect screenRect = rootView.bounds;
+			self.uiView.frame = CGRectMake (0, rootView.bounds.size.height, rootView.bounds.size.width, rootView.bounds.size.height);
+			//self.uiView.backgroundColor = [UIColor blackColor];
+			//self.uiView.alpha = 0.5;
+			[self.uiView addTarget:self action:@selector(bgClick:) forControlEvents:UIControlEventTouchUpInside];
+			[rootView addSubview:self.uiView];
 
-		self.datePicker = [[UIDatePicker alloc] init];
-		self.datePicker.datePickerMode = UIDatePickerModeDate;
-		//self.datePicker.datePickerMode = UIDatePickerModeDateAndTime;
-		self.datePicker.hidden = NO;
-		self.datePicker.date = [NSDate date];
-		[self.datePicker addTarget:self action:@selector(dateChanged:) forControlEvents:UIControlEventValueChanged];
+			self.datePicker = [[UIDatePicker alloc] init];
+			self.datePicker.datePickerMode = UIDatePickerModeDate;
+			//self.datePicker.datePickerMode = UIDatePickerModeDateAndTime;
+			self.datePicker.hidden = NO;
+			self.datePicker.date = [NSDate date];
+			[self.datePicker addTarget:self action:@selector(dateChanged:) forControlEvents:UIControlEventValueChanged];
 
-		CGRect datePickerFrame = self.datePicker.frame;
-		datePickerFrame.origin.y = rootView.bounds.size.height;
-		//datePickerFrame.origin.y = rootView.bounds.size.height - datePickerFrame.size.height;
-		self.datePicker.frame = datePickerFrame;
-		[rootView addSubview:self.datePicker];
+			CGRect datePickerFrame = self.datePicker.frame;
+			//datePickerFrame.origin.y = rootView.bounds.size.height;
+			datePickerFrame.origin.y = rootView.bounds.size.height - datePickerFrame.size.height;
+			self.datePicker.frame = datePickerFrame;
+			[self.uiView addSubview:self.datePicker];
+
+			UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, self.datePicker.frame.origin.y - MyDateTimePickerToolbarHeight, rootView.bounds.size.width, MyDateTimePickerToolbarHeight)];
+			//toolbar.barStyle = UIBarStyleBlackOpaque;
+			toolbar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+			[self.uiView addSubview:toolbar];
+
+			UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle: @"Done" style: UIBarButtonItemStyleBordered target: self action: @selector(donePressed)];
+			UIBarButtonItem* flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+			toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneButton, nil];
+		}
 		// slide in
-		[UIView animateWithDuration:0.3 
+		[UIView animateWithDuration:0.3
 			animations:^{
-				self.datePicker.frame = CGRectMake( self.datePicker.frame.origin.x,
-						self.datePicker.frame.origin.y - datePickerFrame.size.height,
-						self.datePicker.frame.size.width,
-						self.datePicker.frame.size.height);
+				self.uiView.frame = CGRectMake( self.uiView.frame.origin.x,
+				0,
+				self.uiView.frame.size.width,
+				self.uiView.frame.size.height);
 			} completion:^(BOOL finished) {
 
-			}];
+		}];
+
 	}
 
 }
@@ -99,17 +115,14 @@ extern "C" void sendEvent(int type, const char *data);
 
 		[self setShowing:NO];
 
-		[self.bgView removeFromSuperview];
-
 		// slide out
 		[UIView animateWithDuration:0.3
 			animations:^{
-				self.datePicker.frame = CGRectMake( self.datePicker.frame.origin.x,
-						[[[[UIApplication sharedApplication] keyWindow] rootViewController] view].bounds.size.height,
-						self.datePicker.frame.size.width,
-						self.datePicker.frame.size.height);
+				self.uiView.frame = CGRectMake( self.uiView.frame.origin.x,
+				[[[[UIApplication sharedApplication] keyWindow] rootViewController] view].bounds.size.height,
+				self.uiView.frame.size.width,
+				self.uiView.frame.size.height);
 			} completion:^(BOOL finished) {
-				[self.datePicker removeFromSuperview];
 				sendEvent(1, "remove");
 			}];
 	}
@@ -136,10 +149,18 @@ extern "C" void sendEvent(int type, const char *data);
 	[self removeDatePicker];
 }
 
+- (void) donePressed {
+	trace("donePressed");
+	[self removeDatePicker];
+}
+
 - (void) dealloc {
 
-	[bgView release];
-	bgView = nil;
+	[uiView release];
+	uiView = nil;
+
+	[toolBar release];
+	toolBar = nil;
 
 	[datePicker release];
 	datePicker = nil;

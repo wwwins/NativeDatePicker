@@ -13,6 +13,7 @@ class Main extends Sprite {
 
 	static inline var OFFSET_Y:Int = 100;
 	private var format:TextFormat;
+	private var label:TextField;
 
 	public function new () {
 		
@@ -21,6 +22,15 @@ class Main extends Sprite {
 		format = new TextFormat();
 		format.color = 0x0000FF;
 		format.size = 16;
+
+		label = new TextField();
+		label.defaultTextFormat = format;
+		label.text = "Date:";
+		label.selectable = false;
+		label.x = 0;
+		label.y = OFFSET_Y - 30;
+		label.width = 150;
+		addChild(label);
 		
 		var btn1 = createBtn("check");
 		btn1.x = 0;
@@ -35,11 +45,11 @@ class Main extends Sprite {
 		var btn3 = createBtn("remove");
 		btn3.x = 220;
 		btn3.y = OFFSET_Y;
-		addChild(btn3);
+		//addChild(btn3);
 
 		btn1.addEventListener(MouseEvent.CLICK, check);
 		btn2.addEventListener(MouseEvent.CLICK, show);
-		btn3.addEventListener(MouseEvent.CLICK, remove);
+		//btn3.addEventListener(MouseEvent.CLICK, remove);
 
 		Extension.setEventHandle(onEvent);
 
@@ -61,11 +71,17 @@ class Main extends Sprite {
 		Actuate.tween(box, 2, { x:Math.random () * stage.stageWidth } ).onComplete(animateBox, [box]);
 	}
 
-	private static function onEvent(e:Dynamic) {
+	private function onEvent(e:Dynamic) {
 		var data = Reflect.field(e, "data");
 		var type = Reflect.field(e, "type");
 		trace("onEvent:"+type+":"+data);
-		if(type=="1") Lib.resume();
+
+		if (type=="0") {
+			label.text = "Date:"+data;
+		}
+		if (type=="1") {
+			Lib.resume();
+		}
 	}
 
 	private function createBtn(txt:String):Sprite {
