@@ -11,6 +11,7 @@
 @property (nonatomic, retain) UIDatePicker *datePicker;
 @property (nonatomic, retain) UIControl *uiView;
 @property (nonatomic, retain) UIToolbar *toolBar;
+@property (nonatomic, retain) UILabel *uiLabel;
 @property (nonatomic, assign) BOOL showing;
 
 + (DatePickerViewController *)sharedInstance;
@@ -25,6 +26,10 @@
 
 - (void) bgClick:(id)sender;
 
+- (void) donePressed;
+
+- (void) cancelPressed;
+
 @end
 
 @implementation DatePickerViewController
@@ -32,6 +37,7 @@
 @synthesize datePicker;
 @synthesize uiView;
 @synthesize toolBar;
+@synthesize uiLabel;
 @synthesize showing;
 
 static DatePickerViewController *sharedInstance = nil;
@@ -87,12 +93,23 @@ extern "C" void sendEvent(int type, const char *data);
 
 			UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, self.datePicker.frame.origin.y - MyDateTimePickerToolbarHeight, rootView.bounds.size.width, MyDateTimePickerToolbarHeight)];
 			//toolbar.barStyle = UIBarStyleBlackOpaque;
-			toolbar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 			[self.uiView addSubview:toolbar];
 
-			UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle: @"Done" style: UIBarButtonItemStyleBordered target: self action: @selector(donePressed)];
-			UIBarButtonItem* flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
-			toolbar.items = [NSArray arrayWithObjects:flexibleSpace, doneButton, nil];
+			UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithTitle: @"Cancel" style:UIBarButtonSystemItemCancel target: self action: @selector(cancelPressed)];
+
+			self.uiLabel = [[UILabel alloc] initWithFrame:CGRectMake(0.0 , 11.0f, 160.0f, 21.0f)];
+			[self.uiLabel setFont:[UIFont fontWithName:@"Helvetica-Bold" size:18]];
+			[self.uiLabel setBackgroundColor:[UIColor clearColor]];
+			//[self.uiLabel setTextColor:[UIColor colorWithRed:157.0/255.0 green:157.0/255.0 blue:157.0/255.0 alpha:1.0]];
+			[self.uiLabel setText:@"Select"];
+			[self.uiLabel setTextAlignment:NSTextAlignmentCenter];
+			self.uiLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+
+			UIBarButtonItem *title = [[UIBarButtonItem alloc] initWithCustomView:self.uiLabel];
+
+			UIBarButtonItem *doneButton   = [[UIBarButtonItem alloc] initWithTitle: @"Done" style: UIBarButtonItemStyleBordered target: self action: @selector(donePressed)];
+			UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target: nil action: nil];
+			toolbar.items = [NSArray arrayWithObjects:cancelButton, flexibleSpace, title, flexibleSpace, doneButton, nil];
 		}
 		// slide in
 		[UIView animateWithDuration:0.3
@@ -138,6 +155,8 @@ extern "C" void sendEvent(int type, const char *data);
 	[df setDateFormat:@"yyy-MM-dd"];
 	NSString *formatedDate = [df stringFromDate:self.datePicker.date];
 
+	[self.uiLabel setText:formatedDate];
+
 	NSLog(@"date: %@", formatedDate);
 
 	// send back
@@ -151,10 +170,19 @@ extern "C" void sendEvent(int type, const char *data);
 
 - (void) donePressed {
 	trace("donePressed");
+	[self dateChanged:nil];
+	[self removeDatePicker];
+}
+
+- (void) cancelPressed {
+	trace("cancelPress");
 	[self removeDatePicker];
 }
 
 - (void) dealloc {
+
+	[uiLabel release];
+	uiLabel = nil;
 
 	[uiView release];
 	uiView = nil;
