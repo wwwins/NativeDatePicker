@@ -3,7 +3,6 @@
 
 #include "Extension.h"
 
-#define MyDateTimePickerToolbarHeight 40
 
 // UIViewController -> NSObject
 @interface DatePickerViewController : NSObject
@@ -40,6 +39,8 @@
 @synthesize uiLabel;
 @synthesize showing;
 
+static const int MyDateTimePickerToolbarHeight = 40;
+
 static DatePickerViewController *sharedInstance = nil;
 
 
@@ -47,7 +48,7 @@ extern "C" void sendEvent(int type, const char *data);
 
 + (DatePickerViewController *)sharedInstance {
 
-	if (sharedInstance == nil) {
+	if (!sharedInstance) {
 		sharedInstance = [[DatePickerViewController alloc] init];
 	}
 	return sharedInstance;
@@ -65,11 +66,11 @@ extern "C" void sendEvent(int type, const char *data);
 
 	UIView *rootView = [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
 
-	if (![self showing]) {
+	if (!self.showing) {
 
-		[self setShowing:YES];
+		self.showing = YES;
 
-		if (self.uiView==nil) {
+		if (!self.uiView) {
 			self.uiView = [[UIControl alloc] init];
 			//CGRect screenRect = rootView.bounds;
 			self.uiView.frame = CGRectMake (0, rootView.bounds.size.height, rootView.bounds.size.width, rootView.bounds.size.height);
@@ -128,9 +129,9 @@ extern "C" void sendEvent(int type, const char *data);
 
 - (void) removeDatePicker {
 
-	if ([self showing]) {
+	if (self.showing) {
 
-		[self setShowing:NO];
+		self.showing = NO;
 
 		// slide out
 		[UIView animateWithDuration:0.3
