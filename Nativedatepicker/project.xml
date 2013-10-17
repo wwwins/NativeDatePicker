@@ -3,7 +3,7 @@
 	
 	<meta title="Nativedatepicker" package="com.flashisobar.nativedatepicker" version="1.0.0" company="flashisobar" />
 	<app main="Main" path="Export" file="Nativedatepicker" />
-	<window orientation="portrait" background="#CCCCCC" if="ios" />
+	<window orientation="portrait" background="#00393B" if="ios" />
 	
 	<source path="Source" />
 	
