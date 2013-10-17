@@ -59,9 +59,14 @@ void extension_remove_datePicker () {
 }
 DEFINE_PRIM (extension_remove_datePicker, 0);
 
+
+void extension_set_datePickerMode (value modeValue) {
+	setDatePickerMode(val_int(modeValue));
+}
+DEFINE_PRIM (extension_set_datePickerMode, 1);
+
 extern "C" void extension_main () {}
 DEFINE_ENTRY_POINT (extension_main);
-
 
 
 extern "C" int extension_register_prims () { return 0; }
