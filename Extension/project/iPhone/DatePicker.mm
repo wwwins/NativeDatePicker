@@ -222,5 +222,11 @@ namespace extension {
 		[[DatePickerViewController sharedInstance] removeDatePicker];
 
 	}
+
+	void setDatePickerMode(int mode) {
+
+		[DatePickerViewController sharedInstance].datePicker.datePickerMode = mode;
+
+	}
     
 }

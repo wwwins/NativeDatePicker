@@ -14,6 +14,8 @@ namespace extension {
 	void showDatePicker();
 
 	void removeDatePicker();
+
+	void setDatePickerMode(int modeValue);
 }
 
 

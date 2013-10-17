@@ -49,4 +49,12 @@ class Extension {
 	}
 	private static var extension_remove_datePicker = Lib.load ("extension", "extension_remove_datePicker", 0);
 
+	public static function setDatePickerMode(modeValue:Int):Void {
+
+		extension_set_datePickerMode(modeValue);
+
+	}
+	private static var extension_set_datePickerMode = Lib.load ("extension", "extension_set_datePickerMode", 1);
+
+
 }
